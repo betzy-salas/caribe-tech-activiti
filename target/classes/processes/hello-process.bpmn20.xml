@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://activiti.org/bpmn">
+
+  <process id="hello-process" name="Hello Process" isExecutable="true">
+    <startEvent id="start" name="Start" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="helloTask" />
+    <serviceTask id="helloTask" name="Hello Service Task" activiti:class="com.example.activiti.processes.hello.HelloTask" />
+    <sequenceFlow id="flow2" sourceRef="helloTask" targetRef="end" />
+    <endEvent id="end" name="End" />
+  </process>
+</definitions>

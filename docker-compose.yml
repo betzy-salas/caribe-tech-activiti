@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:13
+    container_name: activiti-db
+    restart: always
+    environment:
+      POSTGRES_USER: activiti_user
+      POSTGRES_PASSWORD: activiti_password
+      POSTGRES_DB: activiti
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local

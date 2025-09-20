@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="Definitions_0eablv7"
+                  exporter="bpmn-js (https://demo.bpmn.io)"
+                  exporterVersion="18.3.1"
+                  xmlns:activiti="http://activiti.org/bpmn"
+                  targetNamespace="http://activiti.org/bpmn">
+    <bpmn:process id="move-rates" name="move-rates" isExecutable="true">
+        <bpmn:startEvent id="StartEvent" name="StartProcess">
+            <bpmn:outgoing>Flow_13lptyv</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow id="Flow_13lptyv" sourceRef="StartEvent" targetRef="getRequests" />
+        <bpmn:exclusiveGateway id="gatewayValidateRequest">
+            <bpmn:incoming>Flow_0nxl10f</bpmn:incoming>
+            <bpmn:outgoing>goToTimer</bpmn:outgoing>
+            <bpmn:outgoing>goToEndEvent</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_0nxl10f" sourceRef="getRequests" targetRef="gatewayValidateRequest" />
+        <bpmn:sequenceFlow id="goToTimer" sourceRef="gatewayValidateRequest" targetRef="eventScheduler">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request == "APPROVED"}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:intermediateCatchEvent id="eventScheduler">
+            <bpmn:incoming>goToTimer</bpmn:incoming>
+            <bpmn:outgoing>goToMoveRate</bpmn:outgoing>
+            <bpmn:timerEventDefinition id="TimerEventDefinition_0pxlw2j">
+                <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${dueDate}</bpmn:timeDate>
+            </bpmn:timerEventDefinition>
+        </bpmn:intermediateCatchEvent>
+        <bpmn:sequenceFlow id="goToMoveRate" sourceRef="eventScheduler" targetRef="moveRates" />
+        <bpmn:endEvent id="EndProcess">
+            <bpmn:incoming>goToEnd</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="goToEnd" sourceRef="moveRates" targetRef="EndProcess" />
+        <bpmn:sequenceFlow id="goToEndEvent" sourceRef="gatewayValidateRequest" targetRef="errorEvent" />
+        <bpmn:endEvent id="errorEvent">
+            <bpmn:incoming>goToEndEvent</bpmn:incoming>
+            <bpmn:errorEventDefinition id="ErrorEventDefinition_1x42vbn" />
+        </bpmn:endEvent>
+        <bpmn:serviceTask id="getRequests" name="Validar solicitudes de cambio de tasas" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>validateRequest</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>Flow_13lptyv</bpmn:incoming>
+            <bpmn:outgoing>Flow_0nxl10f</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="moveRates" name="Mover tasas" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>moveRates</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>goToMoveRate</bpmn:incoming>
+            <bpmn:outgoing>goToEnd</bpmn:outgoing>
+        </bpmn:serviceTask>
+    </bpmn:process>
+</bpmn:definitions>

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="Definitions_0eablv7"
+                  exporter="bpmn-js (https://demo.bpmn.io)"
+                  exporterVersion="18.3.1"
+                  xmlns:activiti="http://activiti.org/bpmn"
+                  targetNamespace="http://activiti.org/bpmn">
+    <bpmn:process id="process-transfer-funds" isExecutable="true">
+        <bpmn:startEvent id="startProcess">
+            <bpmn:outgoing>Flow_1wh6rrm</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow id="Flow_1wh6rrm" sourceRef="startProcess" targetRef="validateSourceCustomer" />
+        <bpmn:exclusiveGateway id="gatewayCustomerExists">
+            <bpmn:incoming>Flow_1kqw4nm</bpmn:incoming>
+            <bpmn:outgoing>gotoValidateAccount</bpmn:outgoing>
+            <bpmn:outgoing>gotoErrorCustomer</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_1kqw4nm" sourceRef="validateSourceCustomer" targetRef="gatewayCustomerExists" />
+        <bpmn:sequenceFlow id="gotoValidateAccount" sourceRef="gatewayCustomerExists" targetRef="validateSourceAccount">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:exclusiveGateway id="gatewayAccountExists">
+            <bpmn:incoming>Flow_1pqkj4b</bpmn:incoming>
+            <bpmn:outgoing>gotoValidateProperty</bpmn:outgoing>
+            <bpmn:outgoing>gotoErrorAccount</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_1pqkj4b" sourceRef="validateSourceAccount" targetRef="gatewayAccountExists" />
+        <bpmn:sequenceFlow id="gotoValidateProperty" sourceRef="gatewayAccountExists" targetRef="validatePropertieSourceAccount">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:exclusiveGateway id="gatewayIsBelong">
+            <bpmn:incoming>Flow_0vxfaj9</bpmn:incoming>
+            <bpmn:outgoing>gotoErrorProperty</bpmn:outgoing>
+            <bpmn:outgoing>gotoValidateTargetCustomer</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_0vxfaj9" sourceRef="validatePropertieSourceAccount" targetRef="gatewayIsBelong" />
+        <bpmn:serviceTask id="validateSourceCustomer" name="Validar información cliente propietario cuenta origen" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>validateCustomer</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>Flow_1wh6rrm</bpmn:incoming>
+            <bpmn:outgoing>Flow_1kqw4nm</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="validateSourceAccount" name="Validar información cuenta origen" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>validateAccount</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoValidateAccount</bpmn:incoming>
+            <bpmn:outgoing>Flow_1pqkj4b</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="validatePropertieSourceAccount" name="Validar propiedad cuenta origen" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>accountSourceProperty</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoValidateProperty</bpmn:incoming>
+            <bpmn:outgoing>Flow_0vxfaj9</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoErrorCustomer" sourceRef="gatewayCustomerExists" targetRef="returnErrorCustomer">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:endEvent id="endProcessCustomer">
+            <bpmn:incoming>Flow_0pkz7ac</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_0pkz7ac" sourceRef="returnErrorCustomer" targetRef="endProcessCustomer" />
+        <bpmn:serviceTask id="returnErrorCustomer" name="Retornar mensaje de error para clientes" activiti:class="com.example.activiti.processes.response.ReturnError">
+            <bpmn:extensionElements />
+            <bpmn:incoming>gotoErrorCustomer</bpmn:incoming>
+            <bpmn:outgoing>Flow_0pkz7ac</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoErrorAccount" sourceRef="gatewayAccountExists" targetRef="returnErrorAccount">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:endEvent id="enProcessAccount">
+            <bpmn:incoming>Flow_1bs2d6y</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_1bs2d6y" sourceRef="returnErrorAccount" targetRef="enProcessAccount" />
+        <bpmn:serviceTask id="returnErrorAccount" name="Retornar mensaje de error para cuenta" activiti:class="com.example.activiti.processes.response.ReturnError">
+            <bpmn:incoming>gotoErrorAccount</bpmn:incoming>
+            <bpmn:outgoing>Flow_1bs2d6y</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoErrorProperty" sourceRef="gatewayIsBelong" targetRef="returnErrorProperty">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:endEvent id="endProcessProperty">
+            <bpmn:incoming>Flow_07u065z</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_07u065z" sourceRef="returnErrorProperty" targetRef="endProcessProperty" />
+        <bpmn:serviceTask id="returnErrorProperty" name="Retornar mensaje de error para propiedad" activiti:class="com.example.activiti.processes.response.ReturnError">
+            <bpmn:incoming>gotoErrorProperty</bpmn:incoming>
+            <bpmn:outgoing>Flow_07u065z</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="validateTargetCustomer" name="Validar información cliente propietario cuenta destino" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>validateTargetCustomer</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoValidateTargetCustomer</bpmn:incoming>
+            <bpmn:outgoing>Flow_0e48pwt</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="validateTargetAccount" name="Validar información cuenta destino" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>validateTargetAccount</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoValidateTargetAccount</bpmn:incoming>
+            <bpmn:outgoing>Flow_163ntuu</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="validatePropertieTargetAccount" name="Validar propiedad cuenta destino" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>accountTargetProperty</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoValidateTargetProperty</bpmn:incoming>
+            <bpmn:outgoing>Flow_0usixiy</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoValidateTargetCustomer" sourceRef="gatewayIsBelong" targetRef="validateTargetCustomer">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200 and propertySource}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:exclusiveGateway id="Gateway_0eat880">
+            <bpmn:incoming>Flow_0e48pwt</bpmn:incoming>
+            <bpmn:outgoing>gotoValidateTargetAccount</bpmn:outgoing>
+            <bpmn:outgoing>gotoErrorTargetCustomer</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_0e48pwt" sourceRef="validateTargetCustomer" targetRef="Gateway_0eat880" />
+        <bpmn:sequenceFlow id="gotoValidateTargetAccount" sourceRef="Gateway_0eat880" targetRef="validateTargetAccount">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:exclusiveGateway id="Gateway_0rfuz4l">
+            <bpmn:incoming>Flow_163ntuu</bpmn:incoming>
+            <bpmn:outgoing>gotoValidateTargetProperty</bpmn:outgoing>
+            <bpmn:outgoing>gotoErrorTargetAccount</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_163ntuu" sourceRef="validateTargetAccount" targetRef="Gateway_0rfuz4l" />
+        <bpmn:sequenceFlow id="gotoValidateTargetProperty" sourceRef="Gateway_0rfuz4l" targetRef="validatePropertieTargetAccount">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:serviceTask id="Activity_0ix1avb" name="Retornar mensaje de error para cliente destino" activiti:class="com.example.activiti.processes.response.ReturnError">
+            <bpmn:incoming>gotoErrorTargetCustomer</bpmn:incoming>
+            <bpmn:outgoing>Flow_1m7x74j</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="Activity_1bd5q7h" name="Retornar mensaje de error para cuenta destino" activiti:class="com.example.activiti.processes.response.ReturnError">
+            <bpmn:incoming>gotoErrorTargetAccount</bpmn:incoming>
+            <bpmn:outgoing>Flow_12at0u5</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="returnErrorTargetProperty" name="Retornar mensaje de error para propiedad destino" activiti:class="com.example.activiti.processes.response.ReturnError">
+            <bpmn:incoming>gotoErrorTargetProperty</bpmn:incoming>
+            <bpmn:outgoing>Flow_0wvo6js</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:endEvent id="endProcessTargetCustomer">
+            <bpmn:incoming>Flow_1m7x74j</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:endEvent id="endProcessTargetAccount">
+            <bpmn:incoming>Flow_12at0u5</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:endEvent id="endProcessTargetProperty">
+            <bpmn:incoming>Flow_0wvo6js</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_1m7x74j" sourceRef="Activity_0ix1avb" targetRef="endProcessTargetCustomer" />
+        <bpmn:sequenceFlow id="Flow_12at0u5" sourceRef="Activity_1bd5q7h" targetRef="endProcessTargetAccount" />
+        <bpmn:sequenceFlow id="Flow_0wvo6js" sourceRef="returnErrorTargetProperty" targetRef="endProcessTargetProperty" />
+        <bpmn:sequenceFlow id="gotoErrorTargetCustomer" sourceRef="Gateway_0eat880" targetRef="Activity_0ix1avb">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="gotoErrorTargetAccount" sourceRef="Gateway_0rfuz4l" targetRef="Activity_1bd5q7h">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:exclusiveGateway id="Gateway_1keqe8v">
+            <bpmn:incoming>Flow_0usixiy</bpmn:incoming>
+            <bpmn:outgoing>gotoErrorTargetProperty</bpmn:outgoing>
+            <bpmn:outgoing>gotoIncreaseBalance</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_0usixiy" sourceRef="validatePropertieTargetAccount" targetRef="Gateway_1keqe8v" />
+        <bpmn:sequenceFlow id="gotoErrorTargetProperty" sourceRef="Gateway_1keqe8v" targetRef="returnErrorTargetProperty">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="gotoIncreaseBalance" sourceRef="Gateway_1keqe8v" targetRef="increaseBalanceAccount">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:serviceTask id="increaseBalanceAccount" name="Incrementar saldo en cuenta destino" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>increaseBalance</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoIncreaseBalance</bpmn:incoming>
+            <bpmn:outgoing>gotoDecreaseBalance</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoDecreaseBalance" sourceRef="increaseBalanceAccount" targetRef="decreaseBalanceAccount" />
+        <bpmn:serviceTask id="decreaseBalanceAccount" name="Disminuir saldo de cuenta origen" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>decreaseBalance</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoDecreaseBalance</bpmn:incoming>
+            <bpmn:outgoing>gotoReturnResponseSucess</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="returnResponseSucess" name="Retornar Respuesta Exitosa" activiti:class="com.example.activiti.processes.response.ReturnSuccess">
+            <bpmn:incoming>gotoReturnResponseSucess</bpmn:incoming>
+            <bpmn:outgoing>gotoEndProcess</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoReturnResponseSucess" sourceRef="decreaseBalanceAccount" targetRef="returnResponseSucess" />
+        <bpmn:endEvent id="endProcess">
+            <bpmn:incoming>gotoEndProcess</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="gotoEndProcess" sourceRef="returnResponseSucess" targetRef="endProcess" />
+    </bpmn:process>
+</bpmn:definitions>
