@@ -25,10 +25,13 @@ public class TemplatesResolver {
             }
 
             String placeholder = "${" + key + "}";
+            //System.out.println(placeholder);
+            //System.out.println(value);
             resolved = resolved.replace(
                     placeholder,
                     value != null ? value.toString() : ""
             );
+            //System.out.println(resolved);
         }
 
         return resolved;

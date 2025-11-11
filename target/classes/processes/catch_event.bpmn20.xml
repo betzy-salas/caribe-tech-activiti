@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="Definitions_0eablv7"
+                  exporter="bpmn-js (https://demo.bpmn.io)"
+                  exporterVersion="18.3.1"
+                  xmlns:activiti="http://activiti.org/bpmn"
+                  targetNamespace="http://activiti.org/bpmn">
+    <!-- 🔹 Definición del mensaje que el evento espera -->
+    <bpmn:message id="PdfGenerated" name="PdfGenerated" />
+
+    <bpmn:process id="catch_event" isExecutable="true">
+        <bpmn:startEvent id="StartEvent">
+            <bpmn:outgoing>Flow_0gp26i8</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow id="Flow_0gp26i8" sourceRef="StartEvent" targetRef="WriteHello" />
+        <bpmn:sequenceFlow id="Flow_17rabfk" sourceRef="WriteHello" targetRef="WaitMessage" />
+        <bpmn:sequenceFlow id="Flow_1gn0c47" sourceRef="WaitMessage" targetRef="WriteEnd" />
+        <bpmn:endEvent id="EndEvent">
+            <bpmn:incoming>Flow_1txszn2</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_1txszn2" sourceRef="WriteEnd" targetRef="EndEvent" />
+        <bpmn:serviceTask id="WriteHello" name="Write Hello" activiti:class="com.example.activiti.processes.response.WriteHello">
+            <bpmn:incoming>Flow_0gp26i8</bpmn:incoming>
+            <bpmn:outgoing>Flow_17rabfk</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="WriteEnd" name="Write End" activiti:class="com.example.activiti.processes.response.WriteEnd">
+            <bpmn:incoming>Flow_1gn0c47</bpmn:incoming>
+            <bpmn:outgoing>Flow_1txszn2</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:intermediateCatchEvent id="WaitMessage">
+            <bpmn:incoming>Flow_17rabfk</bpmn:incoming>
+            <bpmn:outgoing>Flow_1gn0c47</bpmn:outgoing>
+            <bpmn:messageEventDefinition id="MessageEventDefinition_1pji5aa" messageRef="PdfGenerated" />
+        </bpmn:intermediateCatchEvent>
+    </bpmn:process>
+</bpmn:definitions>

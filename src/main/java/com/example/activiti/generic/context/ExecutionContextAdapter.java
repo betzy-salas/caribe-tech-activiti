@@ -26,5 +26,7 @@ public class ExecutionContextAdapter {
     public String getProcessInstanceId() {
         return execution.getProcessInstanceId();
     }
+
+    public String getActivityName() {return  execution.getCurrentFlowElement().getName();}
 }
 

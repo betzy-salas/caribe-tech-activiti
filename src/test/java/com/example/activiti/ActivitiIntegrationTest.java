@@ -30,12 +30,12 @@ class ActivitiIntegrationTest {
     @BeforeEach
     void deployManually() {
         repositoryService.createDeployment()
-                .addClasspathResource("buy-income-test.bpmn20.xml")
+                .addClasspathResource("hello-process.bpmn20.xml")
                 .deploy();
     }
 
     @Test
-    @Deployment(resources = "buy-income-test.bpmn20.xml")
+    @Deployment(resources = "hello-process.bpmn20.xml")
     void testProcessExecution() {
         Map<String, Object> variables = Map.of(
                 "TIPO_DOCUMENTO", "CC",
@@ -47,7 +47,7 @@ class ActivitiIntegrationTest {
                 .list()
                 .forEach(p -> System.out.println("🔍 " + p.getKey()));
 
-        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("buy-income-test", variables);
+        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("hello-process", variables);
 
         assertThat(processInstance).isNotNull();
         assertThat(processInstance.isEnded()).isTrue();

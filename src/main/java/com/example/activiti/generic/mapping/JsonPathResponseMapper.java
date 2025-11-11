@@ -32,6 +32,7 @@ public class JsonPathResponseMapper implements ResponseMapper {
     @Override
     public void map(Object responseBody, Map<String, Object> output, ExecutionContextAdapter context) {
         String activityId = context.getActivityId();
+        String nameActivity = context.getActivityName();
 
         if (responseBody == null) {
             System.out.printf("[%s] Response is null. Setting nulls.%n", activityId);
@@ -61,7 +62,7 @@ public class JsonPathResponseMapper implements ResponseMapper {
             try {
                 Object value = documentContext.read(path);   // con la conf, si falta algo → null
                 output.put(key, value);
-                System.out.printf("[%s] %s = %s%n", activityId, key, value);
+                //System.out.printf("[%s] %s = %s%n", activityId, key, value);
             } catch (Exception e) {
                 System.out.printf("[%s] Could not extract '%s'. Setting null. Reason: %s%n",
                         activityId, key, e.getMessage());

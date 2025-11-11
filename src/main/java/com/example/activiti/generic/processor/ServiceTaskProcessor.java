@@ -29,7 +29,7 @@ public abstract class ServiceTaskProcessor implements JavaDelegate {
             throw new ExternalServicesException("Missing config for service: " + name, null);
         }
 
-        System.out.printf("Process ID '%s'%n", context.getActivityId());
+        System.out.printf("Process ID '%s'%n", context.getProcessInstanceId());
 
         Map<String, Object> input = new HashMap<>(context.getVariables());
         ExternalServicesResponse<String> response = getInvoker().invoke(
@@ -75,7 +75,7 @@ public abstract class ServiceTaskProcessor implements JavaDelegate {
                     mapper.map(response.getBody(), mapped, context);
                 }
                 mapped.forEach(context::setVariable);
-                System.out.printf("Activity '%s' mapped and set variables: %s%n", activityId, mapped);
+                //System.out.printf("Activity '%s' mapped and set variables: %s%n", activityId, mapped);
             } catch (Exception e) {
                 System.err.printf("Activity '%s' error during response mapping: %s%n", activityId, e.getMessage());
             }

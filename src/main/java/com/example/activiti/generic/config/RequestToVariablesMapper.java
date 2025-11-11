@@ -28,6 +28,8 @@ public class RequestToVariablesMapper {
         Map<String,String> mapping = config.forProcess(processKey);
         String json = (request instanceof String s) ? s : toJson(request);
 
+        System.out.println("json" + json);
+
         if (mapping.isEmpty()) {
             return objectMapper.convertValue(request, new TypeReference<>() {});
         }

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="Definitions_0eablv7"
+                  exporter="bpmn-js (https://demo.bpmn.io)"
+                  exporterVersion="18.3.1"
+                  xmlns:activiti="http://activiti.org/bpmn"
+                  targetNamespace="http://activiti.org/bpmn">
+    <bpmn:process id="approve-rates" isExecutable="true">
+        <bpmn:startEvent id="StartEvent">
+            <bpmn:outgoing>Flow_0l05wge</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow id="Flow_0l05wge" sourceRef="StartEvent" targetRef="serviceTaskRequestRates" />
+        <bpmn:exclusiveGateway id="gatewayRequestRates">
+            <bpmn:incoming>Flow_027bbgr</bpmn:incoming>
+            <bpmn:outgoing>gotoError</bpmn:outgoing>
+            <bpmn:outgoing>gotoSendNotification</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_027bbgr" sourceRef="serviceTaskRequestRates" targetRef="gatewayRequestRates" />
+        <bpmn:sequenceFlow id="gotoApproveRates" sourceRef="serviceTaskSendNotification" targetRef="serviceTaskManualApprove" />
+        <bpmn:exclusiveGateway id="gatewayValidateRequest">
+            <bpmn:incoming>Flow_004vw2i</bpmn:incoming>
+            <bpmn:outgoing>gotoScheduleProcess</bpmn:outgoing>
+            <bpmn:outgoing>gotoErrorSaveLogs</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="gotoScheduleProcess" sourceRef="gatewayValidateRequest" targetRef="eventScheduler">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:intermediateCatchEvent id="eventScheduler">
+            <bpmn:incoming>gotoScheduleProcess</bpmn:incoming>
+            <bpmn:outgoing>gotoMoveRates</bpmn:outgoing>
+            <bpmn:timerEventDefinition id="TimerEventDefinition_1v35w60">
+                <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${dueDate}</bpmn:timeDate>
+            </bpmn:timerEventDefinition>
+        </bpmn:intermediateCatchEvent>
+        <bpmn:sequenceFlow id="gotoMoveRates" sourceRef="eventScheduler" targetRef="serviceTaskMoveRates" />
+        <bpmn:serviceTask id="serviceTaskRequestRates" name="Recibir solicitud de aprobación de tasas" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>saveRequest</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>Flow_0l05wge</bpmn:incoming>
+            <bpmn:outgoing>Flow_027bbgr</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:userTask id="serviceTaskManualApprove" name="Esperar aprobación manual" activiti:formKey="approvalForm" activiti:candidateGroups="approvers">
+            <bpmn:extensionElements />
+            <bpmn:incoming>gotoApproveRates</bpmn:incoming>
+            <bpmn:outgoing>gotoValidateRequest</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:exclusiveGateway id="gatewayValidateRates">
+            <bpmn:incoming>Flow_0gjm7bu</bpmn:incoming>
+            <bpmn:outgoing>gotoSaveTraceability</bpmn:outgoing>
+            <bpmn:outgoing>Flow_1vx6812</bpmn:outgoing>
+        </bpmn:exclusiveGateway>
+        <bpmn:sequenceFlow id="Flow_0gjm7bu" sourceRef="serviceTaskMoveRates" targetRef="gatewayValidateRates" />
+        <bpmn:sequenceFlow id="gotoSaveTraceability" sourceRef="gatewayValidateRates" targetRef="serviceTaskSaveTrazability">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 204}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="gotoError" sourceRef="gatewayRequestRates" targetRef="serviceTaskSaveRequest">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 201}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:serviceTask id="serviceTaskSaveRequest" name="Grabar registros en logs" activiti:class="com.example.activiti.processes.response.SaveLogError">
+            <bpmn:extensionElements />
+            <bpmn:incoming>gotoError</bpmn:incoming>
+            <bpmn:incoming>gotoErrorSaveLogs</bpmn:incoming>
+            <bpmn:incoming>Flow_1vx6812</bpmn:incoming>
+            <bpmn:outgoing>Flow_0dak11l</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="serviceTaskMoveRates" name="Aprobar tasas" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>moveRates</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoMoveRates</bpmn:incoming>
+            <bpmn:outgoing>Flow_0gjm7bu</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="Flow_0dak11l" sourceRef="serviceTaskSaveRequest" targetRef="serviceTaskResponseError" />
+        <bpmn:endEvent id="EndProcessError">
+            <bpmn:incoming>Flow_0w1fsh7</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_0w1fsh7" sourceRef="serviceTaskResponseError" targetRef="EndProcessError" />
+        <bpmn:serviceTask id="serviceTaskSaveTrazability" name="Grabar registro en trazabilidad" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>saveTraceability</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoSaveTraceability</bpmn:incoming>
+            <bpmn:outgoing>Flow_015xjua</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="Flow_015xjua" sourceRef="serviceTaskSaveTrazability" targetRef="serviceTaskSendNotificationFinal" />
+        <bpmn:endEvent id="EndProcess">
+            <bpmn:incoming>Flow_00wnd60</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_00wnd60" sourceRef="serviceTaskSendNotificationFinal" targetRef="EndProcess" />
+        <bpmn:serviceTask id="serviceTaskResponseError" name="Responder mensaje de error" activiti:class="com.example.activiti.processes.response.ResponseError">
+            <bpmn:incoming>Flow_0dak11l</bpmn:incoming>
+            <bpmn:outgoing>Flow_0w1fsh7</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="serviceTaskValidateRequest" name="Validar solicitudes de cambio de tasas" activiti:delegateExpression="${genericServiceTask}">
+            <bpmn:extensionElements>
+                <activiti:field name="serviceName">
+                    <activiti:string>validateRequest</activiti:string>
+                </activiti:field>
+            </bpmn:extensionElements>
+            <bpmn:incoming>gotoValidateRequest</bpmn:incoming>
+            <bpmn:outgoing>Flow_004vw2i</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:sequenceFlow id="gotoValidateRequest" sourceRef="serviceTaskManualApprove" targetRef="serviceTaskValidateRequest" />
+        <bpmn:sequenceFlow id="Flow_004vw2i" sourceRef="serviceTaskValidateRequest" targetRef="gatewayValidateRequest" />
+        <bpmn:sequenceFlow id="gotoSendNotification" sourceRef="gatewayRequestRates" targetRef="serviceTaskSendNotification">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus == 201}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="gotoErrorSaveLogs" sourceRef="gatewayValidateRequest" targetRef="serviceTaskSaveRequest">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 200}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:sequenceFlow id="Flow_1vx6812" sourceRef="gatewayValidateRates" targetRef="serviceTaskSaveRequest">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${httpStatus != 204}</bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+        <bpmn:serviceTask id="serviceTaskSendNotification" name="Notificar a los aprobadores" activiti:class="com.example.activiti.processes.response.SendNotification">
+            <bpmn:extensionElements />
+            <bpmn:incoming>gotoSendNotification</bpmn:incoming>
+            <bpmn:outgoing>gotoApproveRates</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:serviceTask id="serviceTaskSendNotificationFinal" name="Enviar notificación a los aprobadores" activiti:class="com.example.activiti.processes.response.SendNotification">
+            <bpmn:extensionElements />
+            <bpmn:incoming>Flow_015xjua</bpmn:incoming>
+            <bpmn:outgoing>Flow_00wnd60</bpmn:outgoing>
+        </bpmn:serviceTask>
+    </bpmn:process>
+</bpmn:definitions>
